@@ -112,7 +112,7 @@ for frame in frames:
 # word_instances['often']
 # [207, 1140, 1144, 2173, 2873, 2975, 3080, 3256]
 
-# tested for 2873 and 1140 of often
+# tested for 2873 and 1140 of "often" and 0 and 1184 of "this"
 rep1 = 0
 rep2 = 1184
 x1, x2 = [], []
@@ -136,7 +136,7 @@ print(x2.shape)
 print(x1_new[:,0].shape)
 print(x2_new[:,0].shape)
 
-##
+## plot original and dtw of one sensor (UL), one word repetition, per dimension (x, y)
 plt.figure()
 plt.subplot(121)
 plt.plot(x1[:, 0], label='original ULx')
@@ -150,7 +150,7 @@ plt.plot(x1_new[:, 1], label='dtw ULy')
 plt.legend()
 plt.title('repetition 1')
 
-##
+## plot original and dtw for both repetitions, in 2d (x, y), one sensor (UL)
 plt.figure()
 plt.subplot(121)
 plt.plot(x1[:, 0], x1[:, 1], label='repetition 1')
@@ -164,13 +164,16 @@ plt.plot(x2_new[:,0], x2_new[:,1], label='repetition 2')
 plt.legend()
 plt.title('dtw UL')
 
-##
+## reshape for plotting all
 x1_d3 = x1.T.reshape(6, 2, -1)
 x2_d3 = x2.T.reshape(6, 2, -1)
 x1_new_d3 = x1_new.T.reshape(6, 2, -1)
 x2_new_d3 = x2_new.T.reshape(6, 2, -1)
 
-##
+## plot two figures: figure 1 for word repetition 1, figure 2 for word repetition 2
+# plot all sensors in 2d
+# left plot: original data (length differs across repetitions)
+# right plot: dtw data (length the same across repetitions)
 for i_rep, (a, b) in enumerate(zip([x1_d3, x2_d3], [x1_new_d3, x2_new_d3])):
     fig, ax = plt.subplots(1, 2)
     for i_sen, sensor in enumerate(['UL', 'LL', 'JW', 'TD', 'TB', 'TT']):
@@ -180,9 +183,3 @@ for i_rep, (a, b) in enumerate(zip([x1_d3, x2_d3], [x1_new_d3, x2_new_d3])):
     ax[0].set_title('repetition ' + str(i_rep+1) + ' original')
     ax[1].set_title('repetition ' + str(i_rep+1) + ' dtw')
 
-##
-# plt.figure()
-# plt.plot(np.array(x1)[1,1])
-#
-# plt.figure()
-# plt.plot(x1_c[:, 3])
