@@ -153,6 +153,11 @@ def longest(dictionary):
         
     return biggest
 
+
+def longest_frame(dictionary):
+    return max([i.shape[0] for i in dictionary.values()])
+
+
 def frobenius_norm(matrix_a, matrix_b):
     difference_matrix = np.subtract(matrix_a, matrix_b)
     frob_norm = LA.norm(difference_matrix)
