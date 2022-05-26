@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.old
+*_old.*
+*.png
+*/*
+!.gitignore
+!README.md
+!utils/*.py
+**/__pycache__/

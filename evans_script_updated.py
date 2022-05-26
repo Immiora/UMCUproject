@@ -1,17 +1,13 @@
 '''
-- load articulation data
-- normalize data (optional)
-- separate data into syllable groups
-- plot 2d representations per word: greyscale, luminance represents time (%)
-- downsample (nearest neighbors)
-- plot all steps
+original evan's basic clustering script
 '''
+
 
 
 import scipy.io, math, os
 import pandas as pd, numpy as np
 import matplotlib.pyplot as plt
-from utils import *
+from old_utils import *
 from nltk.corpus import cmudict
 from numpy import linalg
 import seaborn as sns

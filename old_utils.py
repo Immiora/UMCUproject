@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from nltk.corpus import cmudict
 from numpy import linalg as LA
 
+
 def get_srate(file_number):
     directory = 'data/Data/F1/mat'
 
@@ -12,7 +13,7 @@ def get_srate(file_number):
     file = sorted(os.listdir(directory))[file_number + 1]
 
     f = os.path.join(directory, file)
-    mat = loadmat(f)['usctimit_ema_f1_{:03}_{:03}'.format(file_number *5 + 1, file_number *5 + 5)]
+    mat = loadmat(f)['usctimit_ema_f1_{:03}_{:03}'.format(file_number * 5 + 1, file_number * 5 + 5)]
 
     # returns the srate which is stored here
     return mat[0][1][1][0][0]
@@ -52,90 +53,92 @@ def get_key(val, dictionary):
 
     return instances
 
+
 def make_trajectory_plot(word_dataframe, fixed_axes=False, twoD=False):
-    
     x_UL, y_UL, z_UL = [], [], []
     for coordinate in word_dataframe['UL'][0]:
         x_UL.append(coordinate[0])
         y_UL.append(coordinate[1])
         z_UL.append(coordinate[2])
-    
+
     x_LL, y_LL, z_LL = [], [], []
     for coordinate in word_dataframe['LL'][0]:
         x_LL.append(coordinate[0])
         y_LL.append(coordinate[1])
         z_LL.append(coordinate[2])
-        
+
     x_JW, y_JW, z_JW = [], [], []
     for coordinate in word_dataframe['JW'][0]:
         x_JW.append(coordinate[0])
         y_JW.append(coordinate[1])
         z_JW.append(coordinate[2])
-        
+
     x_TB, y_TB, z_TB = [], [], []
     for coordinate in word_dataframe['TB'][0]:
         x_TB.append(coordinate[0])
         y_TB.append(coordinate[1])
         z_TB.append(coordinate[2])
-        
+
     x_TD, y_TD, z_TD = [], [], []
     for coordinate in word_dataframe['TD'][0]:
         x_TD.append(coordinate[0])
         y_TD.append(coordinate[1])
         z_TD.append(coordinate[2])
-        
+
     x_TT, y_TT, z_TT = [], [], []
     for coordinate in word_dataframe['TT'][0]:
         x_TT.append(coordinate[0])
         y_TT.append(coordinate[1])
         z_TT.append(coordinate[2])
-    
-    # makes all the axis this size, currently 
+
+    # makes all the axis this size, currently
     if fixed_axes:
-        ax.set_xlim3d(  13,  15)
-        ax.set_ylim3d( -72, -67)
+        ax.set_xlim3d(13, 15)
+        ax.set_ylim3d(-72, -67)
         ax.set_zlim3d(-2.5, 2.5)
-    
+
     if not twoD:
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        
-        ax.plot3D(x_UL, y_UL, z_UL, label = 'UL')
-        ax.plot3D(x_LL, y_LL, z_LL, label = 'LL')
-        ax.plot3D(x_JW, y_JW, z_JW, label = 'JW')
-        ax.plot3D(x_TB, y_TB, z_TB, label = 'TB')
-        ax.plot3D(x_TD, y_TD, z_TD, label = 'TD')
-        ax.plot3D(x_TT, y_TT, z_TT, label = 'TT')
-        
+
+        ax.plot3D(x_UL, y_UL, z_UL, label='UL')
+        ax.plot3D(x_LL, y_LL, z_LL, label='LL')
+        ax.plot3D(x_JW, y_JW, z_JW, label='JW')
+        ax.plot3D(x_TB, y_TB, z_TB, label='TB')
+        ax.plot3D(x_TD, y_TD, z_TD, label='TD')
+        ax.plot3D(x_TT, y_TT, z_TT, label='TT')
+
     if twoD:
-        plt.plot(x_UL, y_UL, label = 'UL')
-        plt.plot(x_LL, y_LL, label = 'LL')
-        plt.plot(x_JW, y_JW, label = 'JW')
-        plt.plot(x_TB, y_TB, label = 'TB')
-        plt.plot(x_TD, y_TD, label = 'TD')
-        plt.plot(x_TT, y_TT, label = 'TT')
-    
-    plt.legend(loc = 'lower left')
+        plt.plot(x_UL, y_UL, label='UL')
+        plt.plot(x_LL, y_LL, label='LL')
+        plt.plot(x_JW, y_JW, label='JW')
+        plt.plot(x_TB, y_TB, label='TB')
+        plt.plot(x_TD, y_TD, label='TD')
+        plt.plot(x_TT, y_TT, label='TT')
+
+    plt.legend(loc='lower left')
     plt.title(str(word_dataframe['word'][0]) + ', ' + str(word_dataframe['sent'][0]))
     plt.show()
+
 
 def nsyl(word):
     try:
         return [len(list(y for y in x if y[-1].isdigit())) for x in d[word.lower()]]
     except KeyError:
-        #if word not found in cmudict
+        # if word not found in cmudict
         return syllables(word)
-    
+
+
 def syllables(word):
-    #referred from stackoverflow.com/questions/14541303/count-the-number-of-syllables-in-a-word
+    # referred from stackoverflow.com/questions/14541303/count-the-number-of-syllables-in-a-word
     count = 0
     vowels = 'aeiouy'
     word = word.lower()
     if word[0] in vowels:
-        count +=1
-    for index in range(1,len(word)):
-        if word[index] in vowels and word[index-1] not in vowels:
-            count +=1
+        count += 1
+    for index in range(1, len(word)):
+        if word[index] in vowels and word[index - 1] not in vowels:
+            count += 1
     if word.endswith('e'):
         count -= 1
     if word.endswith('le'):
@@ -144,13 +147,14 @@ def syllables(word):
         count += 1
     return count
 
+
 def longest(dictionary):
     biggest = 0
     for word in dictionary:
         length = len(dictionary[word].at[0, 'ULx'])
         if length > biggest:
             biggest = length
-        
+
     return biggest
 
 
