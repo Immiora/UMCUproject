@@ -5,9 +5,9 @@ __pycache__/
 *_old.*
 *.png
 */*
+!data/
 !.gitignore
 !README.md
 !utils/*.py
 !pics/
-!data/
 **/__pycache__/
