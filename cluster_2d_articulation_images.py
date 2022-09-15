@@ -37,6 +37,15 @@ UL_dfs, LL_dfs, JW_dfs, TD_dfs, TB_dfs, TT_dfs = get_sensor_data(subject)
 # each df is of shape N timestamps x articulator and xy position (2 x 6 = 12)
 frames = get_pos_data(subject, [UL_dfs, LL_dfs, JW_dfs, TD_dfs, TB_dfs, TT_dfs])
 
+## test if the current subject has any words with missing data
+missing = []
+
+for frame in frames:
+    if frames[frame].isnull().values.any():
+        missing.append(frame)
+
+if len(missing) > 0:
+    raise Exception("Words found with missing data")
 
 ## get the list of all words
 words=[frames[i].word for i in range(len(frames))]

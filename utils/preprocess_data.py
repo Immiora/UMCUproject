@@ -13,8 +13,8 @@ def separate_by_syl(frames, nsyl, normalize):
     scaler.fit(pd.concat(frames)) # global normalization
     syl_frames = {}
 
-    for count in tqdm.trange(len(frames)):
-        if  frames[count].syl == nsyl:
+    for count in tqdm.tqdm(frames.keys()):
+        if frames[count].syl == nsyl:
             if normalize:
                 # standardize the data to have a mean of 0 and approx. a SD of 1
                 data = scaler.transform(frames[count])
@@ -30,16 +30,17 @@ def separate_by_syl(frames, nsyl, normalize):
     return syl_frames
 
 
-def pad_data(frame):
+def pad_data(frames):
     # target length is the the word with the most samples in that syllable category
-    target_length = get_longest_frame(frame)
+    target_length = get_longest_frame(frames)
     scaler = StandardScaler()
-    scaler.fit(pd.concat(frame)) # global normalization
+    scaler.fit(pd.concat(frames)) # global normalization
     global_mean = scaler.mean_
     padded = {}
 
-    for t, word in zip(tqdm.trange(len(frame)), frame.keys()):
-        current_length = frame[word].shape[0]
+    #for t, word in zip(tqdm.trange(len(frame)), frame.keys()):
+    for word in tqdm.tqdm(frames.keys()):
+        current_length = frames[word].shape[0]
         pad_length1 = int((target_length - current_length) / 2)
 
         if mod((target_length - current_length),2) == 1:
@@ -47,12 +48,12 @@ def pad_data(frame):
         else:
             pad_length2 = pad_length1
 
-        x = pad(frame[word].values, ((pad_length1,pad_length2), (0,0)),
+        x = pad(frames[word].values, ((pad_length1,pad_length2), (0,0)),
                                    mode='constant',
-                                    constant_values=((global_mean,global_mean), (0,0)))
-        padded[word] = pd.DataFrame(x, columns=frame[word].columns).transpose()
-        padded[word].word = frame[word].word
-        padded[word].sent = frame[word].sent
+                                   constant_values=((global_mean,global_mean), (0,0)))
+        padded[word] = pd.DataFrame(x, columns=frames[word].columns).transpose()
+        padded[word].word = frames[word].word
+        padded[word].sent = frames[word].sent
 
     return padded
 

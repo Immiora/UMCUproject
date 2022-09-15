@@ -1,64 +1,74 @@
 '''
 get timestamps over words for each subject
+using MFA forced alignment results
+
+M3: need to rerun 086-090 (missing sentence in transcript), 201_205
+(331_335 were also missing but added already)
+
+F5: remove sorry from 001-005
+
+F1: 146-150 missing (extra sentence at the end), 176-180
 
 python get_timestamps
-python get_timestamps -s F1
+python get_timestamps -s M3
 python get_timestamps -s F1 F5
 '''
 
 import os
+import textgrids
 import argparse
+import pandas as pd
+
 
 def main(subjects):
 
     for subject in subjects:
-        directory = os.path.join('data/Data', subject, 'trans')
-        word_timestamps = []
-        index_number = 0
+        annot_directory = os.path.join('data/Data', subject, 'mfa_textgrids')
+        sent_directory = os.path.join('data/Data', subject, 'text')
+        timestamps = {'file': [], 'text': [], 'xmin': [], 'xmax': [], 'sentence': []}
+        mismatched = []
+        sent_count = 0
 
-        for filename in sorted(os.listdir(directory)):
-            f = os.path.join(directory, filename)
+        for ifile, filename in enumerate(sorted(os.listdir(annot_directory))):
+            grid = textgrids.TextGrid(os.path.join(annot_directory, filename))
+            with open(os.path.join(sent_directory, filename).replace('.TextGrid', '.txt'), 'r') as sent_file:
+                txt = sent_file.read()
+            sentences = txt.rstrip('\n').lower().split('. ')
+            words = txt.rstrip('\n').replace('.', '').lower().split(' ')
+            words = [x for x in words if x]
+            num_words_sent = [len(i.split(' ')) for i in sentences]
+            sent_id = [i for i in range(len(sentences)) for j in range(num_words_sent[i]) ]
+            sent_id = [i + sent_count for i in sent_id]
 
-            with open(f, 'r') as tag_file:
-                lines = tag_file.read().splitlines()
-                counter = -1
-                for x in range(len(lines) - 1):
-                    # skips over the silences (n=?)
-                    # and phonemes that are not linked to a word (n=126)
-                    if (lines[x].split(',')[3] == ''):
-                        continue
+            if ifile == 6: # barb's
+                ind1 = [i for i in range(len(grid['words'])) if grid['words'][i].text == 'barb'][0]
+                ind2 = [i for i in range(len(grid['words'])) if grid['words'][i].text == "'s"][0]
+                grid['words'][ind1].text = grid['words'][ind1].text + "'s"
+                grid['words'][ind1].xmax = grid['words'][ind2].xmax
+                grid['words'].pop(ind2)
 
-                    word = lines[x].split(',')[3].lower()
-                    counter += 1
-                    if lines[x + 1].split(',')[3] != word:
-                        # counts back to the first phoneme of current word to set start time
-                        start_time = lines[x - counter].split(',')[0]
-                        counter = -1
-                        result = [index_number, word, start_time, lines[x].split(',')[1], lines[x].split(',')[-1]]
-                        word_timestamps.append(result)
+            assert len([itext.text for itext in grid['words'] if itext.text != '']) == len(words),\
+                        'word length in text annotation and textgrid does not match'
 
-            index_number += 1
+            iword = 0
+            for index, itext in enumerate(grid['words']):
+                print(itext.text)
 
-        #
-        all_words = []
-        for x in range(len(word_timestamps)):
-            word = word_timestamps[x][1]
-            all_words.append(word)
+                if itext.text == '':
+                    continue
+                else:
+                    assert itext.text.replace("'", '') == words[iword].replace("'", ''), 'annot and textgrid words do not match'
+                    timestamps['file'].append(ifile)
+                    timestamps['text'].append(itext.text)
+                    timestamps['xmin'].append(itext.xmin)
+                    timestamps['xmax'].append(itext.xmax)
+                    timestamps['sentence'].append(sent_id[iword] + 1)
+                    iword += 1
+            sent_count += len(sentences)
+            print(sent_count)
 
-        unique_words = set(all_words)
-
-        #
-        with open(os.path.join(subject + '_timestamps.txt'), 'w') as file:
-            for word_plus_time in word_timestamps:
-                counter = 1
-                for elements in word_plus_time:
-                    if counter % 5 == 0:
-                        file.write(elements + '\n')
-                        counter += 1
-                        continue
-
-                    file.write(str(elements) + ',')
-                    counter += 1
+        pd.DataFrame(timestamps).to_csv(os.path.join(subject + '_timestamps_mfa.txt'),
+                                        sep=',', header=False, index=False)
 
 ##
 if __name__ == '__main__':

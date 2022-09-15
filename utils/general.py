@@ -1,7 +1,7 @@
 import os
 from nltk.corpus import cmudict
 
-# nltk.download('cmudict')
+#nltk.download('cmudict')
 corpus_syl = cmudict.dict()
 
 def listdir_nohidden(path):

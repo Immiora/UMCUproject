@@ -1,5 +1,7 @@
 
 import math
+import warnings
+
 import tqdm
 import pandas as pd
 import numpy as np
@@ -19,7 +21,7 @@ def get_srate(subject, file_number):
         'usctimit_ema_' + subject.lower() + '_{:03}_{:03}'.format(file_number * 5 + 1, file_number * 5 + 5)]
 
     # returns the srate which is awkwardly stored here
-    return mat[0][1][1][0][0]
+    return mat[0][1][1][0][0] # only the first articulator
 
 
 def get_sensor_data(subject):
@@ -36,6 +38,11 @@ def get_sensor_data(subject):
             counter += 5
 
             # make dataframes of the six positions
+            # data.dtype.descr
+            # data[0][0]: audio
+            # data[0][0][0]: label of the stream (0 to 6 streams: sound + sensors): NAME
+            # data[0][0][1]: sampling rate: SRATE
+            # data[0][0][2]: data: SIGNAL
             UL_df.append(pd.DataFrame.from_dict(data[0][1][2]))
             LL_df.append(pd.DataFrame.from_dict(data[0][2][2]))
             JW_df.append(pd.DataFrame.from_dict(data[0][3][2]))
@@ -61,9 +68,13 @@ def get_pos_data(subject, dataframes):
 
         index = positions.index(position)
         for i in range(end_point - starting_point):
-            coordinate = (dataframes[index][file_number][dim][starting_point + i])
-            if str(coordinate) != 'nan':
-                values.append(coordinate)
+            if starting_point + i < len(dataframes[index][file_number][dim]):
+                coordinate = (dataframes[index][file_number][dim][starting_point + i])
+                if str(coordinate) != 'nan':
+                    values.append(coordinate)
+            else:
+                warnings.warn(f'Requested end_point is bigger than data length. File {file_number*5+1}-{file_number*5+5}')
+                break
 
         return np.array(values)
 
@@ -74,16 +85,16 @@ def get_pos_data(subject, dataframes):
                'TBx', 'TBy', 'TTx', 'TTy']
 
     # load timestamps per subject
-    with open(os.path.join(subject + '_timestamps.txt'), 'r') as file:
+    with open(os.path.join(subject + '_timestamps_mfa.txt'), 'r') as file:
         timestamps = file.read().splitlines()
 
-        for word_number in tqdm.trange(len(timestamps)):
+        for word_number in tqdm.trange(len(timestamps)): #2784
             split_line = timestamps[word_number].split(',')
             sent_number = int(split_line[-1])
 
             # find start and end by multiplying the timestamps with the sampling rate
             starting_point = math.floor(float(split_line[2]) * get_srate(subject, int(split_line[0])))
-            end_point = math.ceil(float(split_line[3]) * get_srate(subject, int(split_line[0])))
+            end_point = math.ceil(float(split_line[3]) * get_srate(subject, int(split_line[0]))) #max dur is 3601
 
             # make new dataframe for the current word
             df = pd.DataFrame()
