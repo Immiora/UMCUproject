@@ -9,4 +9,5 @@ __pycache__/
 !README.md
 !utils/*.py
 !pics/
+!data/
 **/__pycache__/
