@@ -5,12 +5,12 @@ run basic clustering analysis
 
 import seaborn as sns
 from utils.read_data import get_sensor_data, get_pos_data
-from utils.plots import make_trajectory_plot, plot_image
+from utils.plots import make_trajectory_plot, plot_correlation_image
 from utils.preprocess_data import separate_by_syl, pad_data, compute_word_difference
 from scipy.spatial import distance
 from scipy.cluster import hierarchy
 import pandas as pd
-import numpy as np
+import matplotlib.pyplot as plt
 
 #import Levenshtein
 
@@ -19,7 +19,7 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 ##
-subject = 'F5'
+subject = 'F1'
 subjects = ['F1', 'F5', 'M1', 'M3']
 
 nsyllables = 5
@@ -31,34 +31,23 @@ normalize = False # global mean/std only
 ## read data into a list of dataframes per articulator
 # each item is of len = N of files,
 # each df per file of shape = N of entries x positions (x,y,z)
-UL_dfs, LL_dfs, JW_dfs, TD_dfs, TB_dfs, TT_dfs = get_sensor_data(subject)
+sensors = get_sensor_data(subject)
 
 
-## read in position data per word
+## read in position data per word (using timestamps for all common words across subjects)
 # frames is a list of dataframes of len = N of words
 # each df is of shape N timestamps x articulator and xy position (2 x 6 = 12)
-frames = get_pos_data(subject, [UL_dfs, LL_dfs, JW_dfs, TD_dfs, TB_dfs, TT_dfs])
+frames = get_pos_data(subject, sensors, 'timestamps_mfa_no_missing')
 
-## test if the current subject has any words with missing data
-missing = []
 
+## use the list of common words to filter out individual timestamps_mfa_no_missing
+common = pd.read_csv('common_words_mfa_no_missing_no_stopwords', sep=',', header=None)
 for frame in frames:
-    if frames[frame].isnull().values.any():
-        missing.append(frame)
-
-# if len(missing) > 0:
-#     raise Exception("Words found with missing data")
-print(f'Number of all dataframes: {len(frames)}')
-print(f'Number of dataframes with missing data: {len(missing)}')
-
-
-## remove missing words
-for mis in missing:
-    frames.pop(mis, None)
-print(f'Number of dataframes after removing dataframes with missing data: {len(frames)}')
+    if frame not in common:
+        frames.pop(frame)
 
 ## get the list of all words
-words=[frames[i].word for i in frames.keys()]
+words = [frames[i].word for i in frames.keys()]
 
 
 ## get subset of words with N of syllables == nsyllables
@@ -67,9 +56,9 @@ syl_frames = separate_by_syl(frames, nsyllables, normalize)
 
 
 ##
-word_inds = [i for i in frames.keys() if frames[i].word == 'geological']
+word_inds = [i for i in frames.keys() if frames[i].word == 'popularity']
 print(f'There are {len(word_inds)} entries of the specified word')
-word_ind = word_inds[1]
+word_ind = word_inds[0]
 word = syl_frames[word_ind].word
 make_trajectory_plot(frames[word_ind], word)
 make_trajectory_plot(syl_frames[word_ind], word)
@@ -84,16 +73,9 @@ correlations = compute_word_difference(padded)
 
 
 ## plot
-import matplotlib.pyplot as plt
-order = np.argsort([i[::-1] for i in correlations.columns])
-plt.figure(figsize=(10, 10))
-im = plt.imshow(correlations.values[order][:, order], cmap='vlag')
-plt.yticks(range(len(correlations.columns)), correlations.columns[order])
-plt.xticks(range(len(correlations.index)), correlations.index[order], rotation=90)
-clb = plt.colorbar(im, fraction=0.046, pad=0.04)
-clb.set_label('Similarity', fontsize=12)
-plt.title(subject)
+plot_correlation_image(subject, correlations)
 plt.savefig(f'pics/{subject.lower()}_similarity_mat_normalize_{str(normalize).lower()}_sorted.png', dpi=160)
+
 
 ## cluster
 row_linkage = hierarchy.linkage(

@@ -23,11 +23,10 @@ def get_srate(subject, file_number):
     # returns the srate which is awkwardly stored here
     return mat[0][1][1][0][0] # only the first articulator
 
-
 def get_sensor_data(subject):
     directory = os.path.join('data/Data', subject, 'mat')
     counter = 1
-    UL_df, LL_df, JW_df, TD_df, TB_df, TT_df = [], [], [], [], [], []
+    sensors = {'UL':[], 'LL':[], 'JAW':[], 'TD':[], 'TB':[], 'TT':[]}
 
     for filename in sorted(listdir_nohidden(directory)):
         if filename.endswith('.mat'):
@@ -39,21 +38,16 @@ def get_sensor_data(subject):
 
             # make dataframes of the six positions
             # data.dtype.descr
-            # data[0][0]: audio
-            # data[0][0][0]: label of the stream (0 to 6 streams: sound + sensors): NAME
-            # data[0][0][1]: sampling rate: SRATE
-            # data[0][0][2]: data: SIGNAL
-            UL_df.append(pd.DataFrame.from_dict(data[0][1][2]))
-            LL_df.append(pd.DataFrame.from_dict(data[0][2][2]))
-            JW_df.append(pd.DataFrame.from_dict(data[0][3][2]))
-            TD_df.append(pd.DataFrame.from_dict(data[0][4][2]))
-            TB_df.append(pd.DataFrame.from_dict(data[0][5][2]))
-            TT_df.append(pd.DataFrame.from_dict(data[0][6][2]))
+            # data[0][0]: audio, data[0][1-6]: sensors
+            # data[0][i][0]: label of the stream (0 to 6 streams: sound + sensors): NAME
+            # data[0][i][1]: sampling rate: SRATE
+            # data[0][i][2]: data: SIGNAL
+            for i in range(1, len(data[0])):
+                sensors[data[0][i][0][0]].append(pd.DataFrame.from_dict(data[0][i][2]))
 
-    return UL_df, LL_df, JW_df, TD_df, TB_df, TT_df
+    return sensors
 
-
-def get_pos_data(subject, dataframes):
+def get_pos_data(subject, dataframes, timestamps_file):
 
     def get_pos_list(position, dimension, file_number, starting_point, end_point):
         values = []
@@ -66,26 +60,26 @@ def get_pos_data(subject, dataframes):
         else:
             raise ValueError
 
-        index = positions.index(position)
         for i in range(end_point - starting_point):
-            if starting_point + i < len(dataframes[index][file_number][dim]):
-                coordinate = (dataframes[index][file_number][dim][starting_point + i])
+            if starting_point + i < len(dataframes[position][file_number][dim]):
+                coordinate = (dataframes[position][file_number][dim][starting_point + i])
                 if str(coordinate) != 'nan':
                     values.append(coordinate)
             else:
-                warnings.warn(f'Requested end_point is bigger than data length. File {file_number*5+1}-{file_number*5+5}')
+                warnings.warn(f'Requested end_point is greater than data length. File {file_number*5+1}-{file_number*5+5}')
+                # check what is up here with F5: looks like audio file is longer than EMA data
                 break
 
         return np.array(values)
 
     frames = {}
-    positions = ['UL', 'LL', 'JW', 'TB', 'TD', 'TT']
+    positions = ['UL', 'LL', 'JAW', 'TD', 'TB', 'TT']
     sensors = ['ULx', 'ULy', 'LLx', 'LLy',
-               'JWx', 'JWy', 'TDx', 'TDy',
+               'JAWx', 'JAWy', 'TDx', 'TDy',
                'TBx', 'TBy', 'TTx', 'TTy']
 
     # load timestamps per subject
-    with open(os.path.join(subject + '_timestamps_mfa.txt'), 'r') as file:
+    with open(os.path.join(subject + '_' + timestamps_file + '.txt'), 'r') as file:
         timestamps = file.read().splitlines()
 
         for word_number in tqdm.trange(len(timestamps)): #2784
@@ -101,12 +95,12 @@ def get_pos_data(subject, dataframes):
 
             for sensor in sensors:
                 # position, dimension, file_number, starting_point, end_point
-                array = get_pos_list(sensor[:2], sensor[-1], int(split_line[0]), starting_point, end_point)
+                array = get_pos_list(sensor[:-1], sensor[-1], int(split_line[0]), starting_point, end_point)
                 df[sensor] = pd.Series(array)
                 df.word = split_line[1]
                 df.sent = int(split_line[-1])
                 df.syl = get_nsyl(split_line[1])
-                frames[word_number] = df
+            frames[word_number] = df
 
     return frames
 

@@ -6,7 +6,7 @@ from numpy import pad, mod, linalg, zeros
 
 def separate_by_syl(frames, nsyl, normalize):
     sensors = ['ULx', 'ULy', 'LLx', 'LLy',
-               'JWx', 'JWy', 'TDx', 'TDy',
+               'JAWx', 'JAWy', 'TDx', 'TDy',
                'TBx', 'TBy', 'TTx', 'TTy']
 
     scaler = StandardScaler()

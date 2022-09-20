@@ -5,13 +5,13 @@ using MFA forced alignment results
 M3: need to rerun 086-090 (missing sentence in transcript), 201_205
 (331_335 were also missing but added already)
 
-F5: remove sorry from 001-005
+F5: remove sorry from 001-005, remove extra sentence in 356-360
 
 F1: 146-150 missing (extra sentence at the end), 176-180
 
-python get_timestamps
-python get_timestamps -s M3
-python get_timestamps -s F1 F5
+python get_orig_timestamps_from_textgrids
+python get_orig_timestamps_from_textgrids -s M3
+python get_orig_timestamps_from_textgrids -s F1 F5
 '''
 
 import os
@@ -25,7 +25,7 @@ def main(subjects):
     for subject in subjects:
         annot_directory = os.path.join('data/Data', subject, 'mfa_textgrids')
         sent_directory = os.path.join('data/Data', subject, 'text')
-        timestamps = {'file': [], 'text': [], 'xmin': [], 'xmax': [], 'sentence': []}
+        timestamps = {'file': [], 'text': [], 'xmin': [], 'xmax': [], 'sentence': [], 'word_in_sentence':[]}
         mismatched = []
         sent_count = 0
 
@@ -38,6 +38,7 @@ def main(subjects):
             words = [x for x in words if x]
             num_words_sent = [len(i.split(' ')) for i in sentences]
             sent_id = [i for i in range(len(sentences)) for j in range(num_words_sent[i]) ]
+            word_id = [j for i in range(len(sentences)) for j in range(num_words_sent[i]) ]
             sent_id = [i + sent_count for i in sent_id]
 
             if ifile == 6: # barb's
@@ -63,6 +64,7 @@ def main(subjects):
                     timestamps['xmin'].append(itext.xmin)
                     timestamps['xmax'].append(itext.xmax)
                     timestamps['sentence'].append(sent_id[iword] + 1)
+                    timestamps['word_in_sentence'].append(word_id[iword])
                     iword += 1
             sent_count += len(sentences)
             print(sent_count)

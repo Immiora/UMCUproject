@@ -21,7 +21,7 @@ def main(subjects):
             df = pd.read_csv(f, header=None)
             text = '. '.join(df[4].dropna().unique()) + '.'
 
-            with open(os.path.join(out_dir, filename.replace('.trans', '.txt')).replace('mri', 'ema'), 'w') as file:
+            with open(os.path.join(out_dir, filename.replace('.trans', '.txt')).replace('mri', 'ema'), 'w') as file: # for M3!
                 file.write(text)
             print('Done')
 
