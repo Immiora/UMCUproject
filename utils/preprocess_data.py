@@ -4,6 +4,24 @@ from sklearn.preprocessing import StandardScaler
 from utils.general import get_longest_frame
 from numpy import pad, mod, linalg, zeros
 
+def filter_by_common(frames):
+    non_common = []
+    common = pd.read_csv('common_words_mfa_no_missing_no_stopwords.txt', sep=',', header=0)
+    for key, frame in frames.items():
+        x = pd.Series({'file': frame.file,
+                       'text': frame.word,
+                       'sentence': frame.sent,
+                       'word_in_sentence': frame.word_in_sent})
+        if (common == x).all(axis=1).sum() == 0:
+            non_common.append(key)
+
+    for i in non_common:
+        frames.pop(i, None)
+    print(f'Number of dataframes after removing dataframes with non-common words: {len(frames)}')
+    assert len(frames) == common.shape[0], 'number of frames does not much number of common words'
+    return frames
+
+
 def separate_by_syl(frames, nsyl, normalize):
     sensors = ['ULx', 'ULy', 'LLx', 'LLy',
                'JAWx', 'JAWy', 'TDx', 'TDy',

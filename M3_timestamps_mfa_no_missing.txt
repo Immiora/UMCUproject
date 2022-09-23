@@ -1,3 +1,4 @@
+file,text,xmin,xmax,sentence,word_in_sentence
 0,this,0.98,1.2,1,0
 0,was,1.2,1.37,1,1
 0,easy,1.37,1.61,1,2

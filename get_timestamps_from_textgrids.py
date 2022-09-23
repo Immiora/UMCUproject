@@ -70,7 +70,7 @@ def main(subjects):
             print(sent_count)
 
         pd.DataFrame(timestamps).to_csv(os.path.join(subject + '_timestamps_mfa.txt'),
-                                        sep=',', header=False, index=False)
+                                        sep=',', header=True, index=False)
 
 ##
 if __name__ == '__main__':

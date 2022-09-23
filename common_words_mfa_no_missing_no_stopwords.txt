@@ -1,3 +1,4 @@
+file,text,sentence,word_in_sentence
 0,bright,4,0
 0,earn,2,2
 0,easy,1,2

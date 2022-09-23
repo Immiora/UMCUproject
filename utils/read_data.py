@@ -79,28 +79,33 @@ def get_pos_data(subject, dataframes, timestamps_file):
                'TBx', 'TBy', 'TTx', 'TTy']
 
     # load timestamps per subject
-    with open(os.path.join(subject + '_' + timestamps_file + '.txt'), 'r') as file:
-        timestamps = file.read().splitlines()
+    timestamps = pd.read_csv(os.path.join(subject + '_' + timestamps_file + '.txt'), sep=',', header=0)
 
-        for word_number in tqdm.trange(len(timestamps)): #2784
-            split_line = timestamps[word_number].split(',')
-            sent_number = int(split_line[-1])
+    #for word_number in tqdm.trange(timestamps.shape[0]): #2784
+    for word_number, row in tqdm.tqdm(timestamps.iterrows(), total=timestamps.shape[0]):
+        #split_line = timestamps[word_number].split(',')
+        #sent_number = row['sentence']#int(split_line[-1])
 
-            # find start and end by multiplying the timestamps with the sampling rate
-            starting_point = math.floor(float(split_line[2]) * get_srate(subject, int(split_line[0])))
-            end_point = math.ceil(float(split_line[3]) * get_srate(subject, int(split_line[0]))) #max dur is 3601
+        # find start and end by multiplying the timestamps with the sampling rate
+        # starting_point = math.floor(float(split_line[2]) * get_srate(subject, int(split_line[0])))
+        # end_point = math.ceil(float(split_line[3]) * get_srate(subject, int(split_line[0]))) #max dur is 3601
+        sr = get_srate(subject, int(row['file']))
+        starting_point = math.floor(float(row['xmin']) * sr)
+        end_point = math.ceil(float(row['xmax']) * sr) #max dur is 3601
 
-            # make new dataframe for the current word
-            df = pd.DataFrame()
+        # make new dataframe for the current word
+        df = pd.DataFrame()
 
-            for sensor in sensors:
-                # position, dimension, file_number, starting_point, end_point
-                array = get_pos_list(sensor[:-1], sensor[-1], int(split_line[0]), starting_point, end_point)
-                df[sensor] = pd.Series(array)
-                df.word = split_line[1]
-                df.sent = int(split_line[-1])
-                df.syl = get_nsyl(split_line[1])
-            frames[word_number] = df
+        for sensor in sensors:
+            # position, dimension, file_number, starting_point, end_point
+            array = get_pos_list(sensor[:-1], sensor[-1], int(row['file']), starting_point, end_point)
+            df[sensor] = pd.Series(array)
+            df.file = row['file']
+            df.word = row['text']
+            df.sent = row['sentence']
+            df.word_in_sent = row['word_in_sentence']
+            df.syl = get_nsyl(row['text'])
+        frames[word_number] = df
 
     return frames
 

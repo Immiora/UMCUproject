@@ -15,11 +15,11 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 def remove_missing(subject, n_total, idx_missing):
-    ts = pd.read_csv(os.path.join(subject + '_timestamps_mfa.txt'), sep=',', header=None)
+    ts = pd.read_csv(os.path.join(subject + '_timestamps_mfa.txt'), sep=',', header=0)
     assert ts.shape[0] == n_total, 'Number of entries in timestamps does not match the length of frames'
     ts.drop(index=idx_missing, inplace=True)
     pd.DataFrame(ts).to_csv(os.path.join(subject + '_timestamps_mfa_no_missing.txt'),
-                                    sep=',', header=False, index=False)
+                                    sep=',', header=True, index=False)
     return ts
 
 def main(subjects):
@@ -45,23 +45,22 @@ def main(subjects):
     # find intersection of word-rows (file, sentence, word and word-num-in-sent across all subjects
     # save the list of common words
     temp = pd.concat(ts_all.values(), axis=0, join='inner')
-    temp = temp.drop(columns=[2, 3]).reset_index(drop=True)
+    temp = temp.drop(columns=['xmin', 'xmax']).reset_index(drop=True)
     temp = temp[temp.duplicated(keep=False)]
     df1 = (temp.groupby(temp.columns.tolist()).apply(lambda x: tuple(x.index)).reset_index(name='idx'))
     n_subjs = df1['idx'].apply(len)
     indx = n_subjs.index[n_subjs == len(subjects)]
     common = df1.loc[indx].drop(columns='idx')
-
-    pd.DataFrame(common).to_csv('common_words_mfa_no_missing.txt', sep=',', header=False, index=False)
+    pd.DataFrame(common).to_csv('common_words_mfa_no_missing.txt', sep=',', header=True, index=False)
 
     # remove most common words
     import nltk
     stopwords = nltk.corpus.stopwords.words('english')
-    [stopwords.append(i) for i in ["they're", "it's", "we'll", "don't", "haven't", "i'd", "i'll"]]
-    common_nostop = common[~common[1].isin(stopwords)]
+    [stopwords.append(i) for i in ["they're", "it's", "we'll", "don't", "haven't", "i'd", "i'll", "us"]]
+    common_nostop = common[~common['text'].isin(stopwords)]
     pd.DataFrame(common_nostop).to_csv('common_words_mfa_no_missing_no_stopwords.txt',
-                                    sep=',', header=False, index=False)
-    pd.DataFrame(common_nostop[1].sort_values()).to_csv('common_words_mfa_no_missing_no_stopwords_wordlist.txt',
+                                    sep=',', header=True, index=False)
+    pd.DataFrame(common_nostop['text'].sort_values()).to_csv('common_words_mfa_no_missing_no_stopwords_wordlist.txt',
                                     sep=',', header=False, index=False)
 
 ##
