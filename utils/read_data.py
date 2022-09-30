@@ -110,3 +110,8 @@ def get_pos_data(subject, dataframes, timestamps_file):
     return frames
 
 
+def load_similarity_mat(p):
+    assert os.path.exists(p), 'file does not exist'
+    x = pd.read_csv(p, sep=',', header=0, index_col=0)
+    #x.columns = x.columns.str.split('.').str[0]
+    return x

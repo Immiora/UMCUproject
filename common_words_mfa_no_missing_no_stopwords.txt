@@ -10,7 +10,6 @@ file,text,sentence,word_in_sentence
 0,shimmers,4,2
 0,sunshine,4,1
 0,thinner,3,2
-0,us,1,4
 0,working,2,6
 1,allow,9,2
 1,away,7,6
@@ -824,7 +823,6 @@ file,text,sentence,word_in_sentence
 48,operates,241,2
 48,plow,244,4
 48,pop,245,7
-48,us,243,5
 48,using,241,4
 49,angry,246,1
 49,answered,246,3
